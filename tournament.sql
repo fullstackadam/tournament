@@ -20,7 +20,7 @@ CREATE TABLE players (
 );
 
 CREATE TABLE matches (
-	tournament SERIAL REFERENCES tournaments(id),
+	--tournament SERIAL REFERENCES tournaments(id),
 	winner SERIAL REFERENCES players(id),
 	loser SERIAL REFERENCES players(id)
 );

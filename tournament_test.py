@@ -3,6 +3,8 @@
 # Test cases for tournament.py
 
 from tournament import *
+import pprint
+
 
 def testDeleteMatches():
     deleteMatches()
@@ -108,11 +110,15 @@ def testPairings():
     registerPlayer("Fluttershy")
     registerPlayer("Applejack")
     registerPlayer("Pinkie Pie")
+    '''Why did you use stripper names for all the test data?'''
     standings = playerStandings()
     [id1, id2, id3, id4] = [row[0] for row in standings]
     reportMatch(id1, id2)
     reportMatch(id3, id4)
     pairings = swissPairings()
+    pp = pprint.PrettyPrinter(indent=4)
+    #pp.pprint(globals())
+    pp.pprint(locals())
     if len(pairings) != 2:
         raise ValueError(
             "For four players, swissPairings should return two pairs.")

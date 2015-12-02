@@ -1,15 +1,13 @@
 #!/usr/bin/env python
-# 
+#
 # tournament.py -- implementation of a Swiss-system tournament
 #
 
 import psycopg2
 
-
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
-
 
 def deleteMatches():
     """Remove all the match records from the database."""
@@ -19,7 +17,6 @@ def deleteMatches():
     DB.commit()
     DB.close()
 
-
 def deletePlayers():
     """Remove all the player records from the database."""
     DB = connect()
@@ -27,7 +24,6 @@ def deletePlayers():
     c.execute('DELETE FROM players')
     DB.commit()
     DB.close()
-
 
 def countPlayers():
     """Returns the number of players currently registered."""
@@ -38,10 +34,9 @@ def countPlayers():
     DB.close()
     return total
 
-
 def registerPlayer(name):
     """Adds a player to the tournament database.
-  
+
     The database assigns a unique serial id number for the player.  (This
     should be handled by your SQL database schema, not in your Python code.)
   
@@ -50,11 +45,10 @@ def registerPlayer(name):
     """
     DB = connect()
     c = DB.cursor()
-    player = (name,)
-    c.execute('INSERT INTO players (name) VALUES (%s)',player)
+    player = (name, )
+    c.execute('INSERT INTO players (name) VALUES (%s)', player)
     DB.commit()
     DB.close()
-
 
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -71,10 +65,19 @@ def playerStandings():
     """
     DB = connect()
     c = DB.cursor()
-    c.execute('DELETE FROM matches')
-    DB.commit()
+    q = 'SELECT "id","name",COUNT("winner") as "wins",(' \
+    'SELECT COUNT(*)' \
+    'FROM "players" as "ps"' \
+    'LEFT JOIN "matches" as "ms" ON "ms"."winner" = "players"."id" OR "ms"."loser" = "players"."id"' \
+    'WHERE "ps"."id" = "players"."id"' \
+    'AND ("ms"."winner"="players"."id" OR "ms"."loser"="players"."id")) as "matchs"' \
+    'FROM "players" ' \
+    'LEFT JOIN "matches" ON "winner" = "id"' \
+    'GROUP BY "id"'
+    c.execute(q)
+    standings = c.fetchall()
     DB.close()
-
+    return standings
 
 def reportMatch(winner, loser):
     """Records the outcome of a single match between two players.
@@ -83,14 +86,13 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    match = (winner,loser,)
+    match = (winner, loser, )
     DB = connect()
     c = DB.cursor()
-    c.execute('INSERT INTO players (winner,loser) VALUES (%s,%s)',(winner,loser))
+    c.execute('INSERT INTO matches (winner,loser) VALUES (%s,%s)', match)
     DB.commit()
     DB.close()
- 
- 
+
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
   
@@ -106,6 +108,31 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    DB = connect()
+    c = DB.cursor()
 
+    q = 'SELECT id,name,COUNT(winner) ' \
+    'as total ' \
+    'FROM players ' \
+    'LEFT JOIN matches ' \
+    'on matches.winner = players.id ' \
+    'GROUP BY id ' \
+    'ORDER BY total'
 
+    c.execute(q)
+    players = c.fetchall()
+    DB.close()
+    player1 = True
+    for player in players:
+        if player1:
+            player1data = player[0], player[1]
+            player1 = False
+        else:
+            match = (player1data[0], player1data[1], player[0], player[1])
+            try:
+                pairings = pairings, match
+            except NameError:
+                pairings = match
+            player1 = True
 
+    return pairings
