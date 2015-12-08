@@ -7,50 +7,50 @@ import psycopg2
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("dbname=tournament")
+    return psycopg2.connect("databasename=tournament")
 
-def deleteMatches():
+def delete_matches():
     """Remove all the match records from the database."""
-    DB = connect()
-    c = DB.cursor()
-    c.execute('DELETE FROM matches')
-    DB.commit()
-    DB.close()
+    database = connect()
+    cursor = database.cursor()
+    cursor.execute('DELETE FROM matches')
+    database.commit()
+    database.close()
 
-def deletePlayers():
+def delete_players():
     """Remove all the player records from the database."""
-    DB = connect()
-    c = DB.cursor()
-    c.execute('DELETE FROM players')
-    DB.commit()
-    DB.close()
+    database = connect()
+    cursor = database.cursor()
+    cursor.execute('DELETE FROM players')
+    database.commit()
+    database.close()
 
-def countPlayers():
+def count_players():
     """Returns the number of players currently registered."""
-    DB = connect()
-    c = DB.cursor()
-    c.execute('SELECT COUNT(*) FROM players')
-    total = c.fetchone()[0]
-    DB.close()
+    database = connect()
+    cursor = database.cursor()
+    cursor.execute('SELECT COUNT(*) FROM players')
+    total = cursor.fetchone()[0]
+    database.close()
     return total
 
-def registerPlayer(name):
+def register_player(name):
     """Adds a player to the tournament database.
 
     The database assigns a unique serial id number for the player.  (This
     should be handled by your SQL database schema, not in your Python code.)
-  
+
     Args:
       name: the player's full name (need not be unique).
     """
-    DB = connect()
-    c = DB.cursor()
+    database = connect()
+    cursor = database.cursor()
     player = (name, )
-    c.execute('INSERT INTO players (name) VALUES (%s)', player)
-    DB.commit()
-    DB.close()
+    cursor.execute('INSERT INTO players (name) VALUES (%s)', player)
+    database.commit()
+    database.close()
 
-def playerStandings():
+def player_standings():
     """Returns a list of the players and their win records, sorted by wins.
 
     The first entry in the list should be the player in first place, or a player
@@ -63,23 +63,25 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    DB = connect()
-    c = DB.cursor()
-    q = 'SELECT "id","name",COUNT("winner") as "wins",(' \
+    database = connect()
+    cursor = database.cursor()
+    query = 'SELECT "id","name",COUNT("winner") as "wins",(' \
     'SELECT COUNT(*)' \
     'FROM "players" as "ps"' \
-    'LEFT JOIN "matches" as "ms" ON "ms"."winner" = "players"."id" OR "ms"."loser" = "players"."id"' \
+    'LEFT JOIN "matches" as "ms" ON "ms"."winner" = "players"."id" ' \
+    'OR "ms"."loser" = "players"."id"' \
     'WHERE "ps"."id" = "players"."id"' \
-    'AND ("ms"."winner"="players"."id" OR "ms"."loser"="players"."id")) as "matchs"' \
+    'AND ("ms"."winner"="players"."id" ' \
+    'OR "ms"."loser"="players"."id")) as "matchs"' \
     'FROM "players" ' \
-    'LEFT JOIN "matches" ON "winner" = "id"' \
+    'LEFT JOIN "matches" ON "winner" = "id" ' \
     'GROUP BY "id"'
-    c.execute(q)
-    standings = c.fetchall()
-    DB.close()
+    cursor.execute(query)
+    standings = cursor.fetchall()
+    database.close()
     return standings
 
-def reportMatch(winner, loser):
+def report_match(winner, loser):
     """Records the outcome of a single match between two players.
 
     Args:
@@ -87,20 +89,20 @@ def reportMatch(winner, loser):
       loser:  the id number of the player who lost
     """
     match = (winner, loser, )
-    DB = connect()
-    c = DB.cursor()
-    c.execute('INSERT INTO matches (winner,loser) VALUES (%s,%s)', match)
-    DB.commit()
-    DB.close()
+    database = connect()
+    cursor = database.cursor()
+    cursor.execute('INSERT INTO matches (winner,loser) VALUES (%s,%s)', match)
+    database.commit()
+    database.close()
 
-def swissPairings():
+def swiss_pairings():
     """Returns a list of pairs of players for the next round of a match.
-  
+
     Assuming that there are an even number of players registered, each player
     appears exactly once in the pairings.  Each player is paired with another
     player with an equal or nearly-equal win record, that is, a player adjacent
     to him or her in the standings.
-  
+
     Returns:
       A list of tuples, each of which contains (id1, name1, id2, name2)
         id1: the first player's unique id
@@ -108,10 +110,10 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    DB = connect()
-    c = DB.cursor()
+    database = connect()
+    cursor = database.cursor()
 
-    q = 'SELECT id,name,COUNT(winner) ' \
+    query = 'SELECT id,name,COUNT(winner) ' \
     'as total ' \
     'FROM players ' \
     'LEFT JOIN matches ' \
@@ -119,9 +121,9 @@ def swissPairings():
     'GROUP BY id ' \
     'ORDER BY total'
 
-    c.execute(q)
-    players = c.fetchall()
-    DB.close()
+    cursor.execute(query)
+    players = cursor.fetchall()
+    database.close()
     player1 = True
     for player in players:
         if player1:
