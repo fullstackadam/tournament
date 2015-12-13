@@ -122,7 +122,7 @@ def test_pairings():
     [id1, id2, id3, id4] = [row[0] for row in standings]
     report_match(id1, id2)
     report_match(id3, id4)
-    pairings = swissPairings()
+    pairings = swiss_pairings()
     if len(pairings) != 2:
         raise ValueError(
             "For four players, swissPairings should return two pairs.")
