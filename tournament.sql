@@ -24,3 +24,26 @@ CREATE TABLE matches (
 	winner SERIAL REFERENCES players(id),
 	loser SERIAL REFERENCES players(id)
 );
+
+CREATE view player_standings as
+SELECT "id","name",COUNT("winner") as "wins", (
+    SELECT COUNT(*)
+    FROM "players" as "ps"
+    LEFT JOIN "matches" as "ms" ON "ms"."winner" = "players"."id"
+    OR "ms"."loser" = "players"."id"
+    WHERE "ps"."id" = "players"."id"
+    AND ("ms"."winner"="players"."id"
+    OR "ms"."loser"="players"."id")
+) as "matchs"
+    FROM "players"
+    LEFT JOIN "matches" ON "winner" = "id"
+    GROUP BY "id";
+
+CREATE view swiss_pairings as
+SELECT "id","name",COUNT("winner")
+as "total"
+FROM "players"
+LEFT JOIN "matches"
+on "matches"."winner" = "players"."id"
+GROUP BY "id"
+ORDER BY "total";

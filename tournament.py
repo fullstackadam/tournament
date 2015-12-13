@@ -7,13 +7,13 @@ import psycopg2
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("databasename=tournament")
+    return psycopg2.connect("dbname=tournament")
 
 def delete_matches():
     """Remove all the match records from the database."""
     database = connect()
     cursor = database.cursor()
-    cursor.execute('DELETE FROM matches')
+    cursor.execute('DELETE FROM "matches"')
     database.commit()
     database.close()
 
@@ -23,7 +23,9 @@ def delete_players():
     cursor = database.cursor()
     cursor.execute('DELETE FROM players')
     database.commit()
+    total = cursor.rowcount
     database.close()
+    return total
 
 def count_players():
     """Returns the number of players currently registered."""
@@ -65,17 +67,7 @@ def player_standings():
     """
     database = connect()
     cursor = database.cursor()
-    query = 'SELECT "id","name",COUNT("winner") as "wins",(' \
-    'SELECT COUNT(*)' \
-    'FROM "players" as "ps"' \
-    'LEFT JOIN "matches" as "ms" ON "ms"."winner" = "players"."id" ' \
-    'OR "ms"."loser" = "players"."id"' \
-    'WHERE "ps"."id" = "players"."id"' \
-    'AND ("ms"."winner"="players"."id" ' \
-    'OR "ms"."loser"="players"."id")) as "matchs"' \
-    'FROM "players" ' \
-    'LEFT JOIN "matches" ON "winner" = "id" ' \
-    'GROUP BY "id"'
+    query = 'SELECT * FROM player_standings'
     cursor.execute(query)
     standings = cursor.fetchall()
     database.close()
@@ -113,13 +105,7 @@ def swiss_pairings():
     database = connect()
     cursor = database.cursor()
 
-    query = 'SELECT id,name,COUNT(winner) ' \
-    'as total ' \
-    'FROM players ' \
-    'LEFT JOIN matches ' \
-    'on matches.winner = players.id ' \
-    'GROUP BY id ' \
-    'ORDER BY total'
+    query = 'SELECT * from swiss_pairings'
 
     cursor.execute(query)
     players = cursor.fetchall()
