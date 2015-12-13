@@ -20,6 +20,7 @@ CREATE TABLE players (
 );
 
 CREATE TABLE matches (
+	id SERIAL PRIMARY KEY,
 	--tournament SERIAL REFERENCES tournaments(id),
 	winner SERIAL REFERENCES players(id),
 	loser SERIAL REFERENCES players(id)
@@ -27,17 +28,20 @@ CREATE TABLE matches (
 
 CREATE view player_standings as
 SELECT "id","name",COUNT("winner") as "wins", (
-    SELECT COUNT(*)
-    FROM "players" as "ps"
-    LEFT JOIN "matches" as "ms" ON "ms"."winner" = "players"."id"
-    OR "ms"."loser" = "players"."id"
-    WHERE "ps"."id" = "players"."id"
-    AND ("ms"."winner"="players"."id"
-    OR "ms"."loser"="players"."id")
-) as "matchs"
-    FROM "players"
-    LEFT JOIN "matches" ON "winner" = "id"
-    GROUP BY "id";
+	SELECT "matches" 
+	FROM "match_counts"
+	WHERE "match_counts"."id" = "players"."id"
+) as "matches"
+FROM "players"
+LEFT JOIN "matches" ON "winner" = "id"
+GROUP BY "id";
+
+CREATE view match_counts as
+SELECT "players"."id",COUNT(*) as "matches"
+FROM "players"
+LEFT JOIN "matches" ON "matches"."winner" = "players"."id"
+OR "matches"."loser" = "players"."id"
+GROUP BY "players"."id";
 
 CREATE view swiss_pairings as
 SELECT "id","name",COUNT("winner")
