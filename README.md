@@ -49,12 +49,14 @@ Press CNTL+D to quit
 Run unit tests
 
 	$ python tournament_test.py 
-	1. Old matches can be deleted.
-	2. Player records can be deleted.
-	3. After deleting, delete_players() returns zero.
-	4. After registering a player, delete_players() returns 1.
-	5. Players can be registered and deleted.
-	6. Newly registered players appear in the standings with no matches.
-	7. After a match, players have updated standings.
-	8. After one match, players with one win are paired.
+	1. After registering a tournament, count_tournaments() returns 1.
+	2. Tournaments can be deleted.
+	3. Old matches can be deleted.
+	4. Player records can be deleted.
+	5. After deleting, count_players() returns zero.
+	6. After registering a player, count_players() returns 1.
+	7. Players can be registered and deleted.
+	8. Newly registered players appear in the standings with no matches.
+	9. After a match, players have updated standings.
+	10. After one match, players with one win are paired.
 	Success!  All tests pass!
