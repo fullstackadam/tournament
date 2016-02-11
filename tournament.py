@@ -5,15 +5,47 @@
 
 from db import DB
 
-def delete_matches():
-    """Remove all the match records from the database."""
+def register_tournament(name):
+    """
+    Adds tournament to tournament table
+    """
 
-    DB().execute('DELETE FROM "matches"',True)
+    tournament = (name, )
+    query = 'INSERT INTO "tournaments" ("name") VALUES (%s)'
+    db = DB()
+    db.cursor().execute(query, tournament)
+    db.conn.commit()
+    db.cursor().close()
+
+def delete_tournaments():
+    """
+    Remove tournament records from the tournament table
+    """
+
+    DB().execute('DELETE FROM "tournaments"', True)
+
+def count_tournaments():
+    """
+    Returns the number of tournaments currently registered.
+    """
+
+    cursor = DB().execute('SELECT COUNT(*) FROM "tournaments"')["cursor"]
+    total = cursor.fetchone()[0]
+    cursor.close()
+
+    return total
+
+def delete_matches():
+    """
+    Remove all the match records from the database.
+    """
+
+    DB().execute('DELETE FROM "matches"', True)
 
 def delete_players():
     """
     Remove all the player records from the database
-    
+
     Returns a count of the players deleted
     """
 
@@ -21,18 +53,23 @@ def delete_players():
     conn["conn"].commit()
     total = conn["cursor"].rowcount
     conn["cursor"].close()
+
     return total
 
 def count_players():
-    """Returns the number of players currently registered."""
+    """
+    Returns the number of players currently registered.
+    """
 
     cursor = DB().execute('SELECT COUNT(*) FROM "players"')["cursor"]
     total = cursor.fetchone()[0]
     cursor.close()
+
     return total
 
 def register_player(name):
-    """Adds a player to the tournament database.
+    """
+    Adds a player to the tournament database.
 
     Args:
       name: the player's full name (need not be unique).
@@ -41,13 +78,13 @@ def register_player(name):
     player = (name, )
     query = 'INSERT INTO "players" ("name") VALUES (%s)'
     db = DB()
-    db.cursor().execute(query,player)
+    db.cursor().execute(query, player)
     db.conn.commit()
     db.cursor().close()
-    
 
 def player_standings():
-    """Returns a list of the players and their win records, sorted by wins.
+    """
+    Returns a list of the players and their win records, sorted by wins.
 
     The first entry in the list should be the player in first place, or a player
     tied for first place if there is currently a tie.
@@ -63,10 +100,12 @@ def player_standings():
     cursor = DB().execute(query)["cursor"]
     standings = cursor.fetchall()
     cursor.close()
+
     return standings
 
-def report_match(winner, loser):
-    """Records the outcome of a single match between two players.
+def report_match(tournament_id, winner, loser):
+    """
+    Records the outcome of a single match between two players.
 
     Args:
       winner:  the id number of the player who won
@@ -75,13 +114,13 @@ def report_match(winner, loser):
     match = (winner, loser, )
     query = 'INSERT INTO "matches" ("winner","loser") VALUES (%s,%s)'
     db = DB()
-    db.cursor().execute(query,match)
+    db.cursor().execute(query, match)
     db.conn.commit()
     db.cursor().close()
 
-
 def swiss_pairings():
-    """Returns a list of pairs of players for the next round of a match.
+    """
+    Returns a list of pairs of players for the next round of a match.
 
     Assuming that there are an even number of players registered, each player
     appears exactly once in the pairings.  Each player is paired with another
@@ -96,7 +135,7 @@ def swiss_pairings():
         name2: the second player's name
     """
 
-    query = 'SELECT * FROM "swiss_pairings"';
+    query = 'SELECT * FROM "swiss_pairings"'
     cursor = DB().execute(query)["cursor"]
     pairings = cursor.fetchall()
     cursor.close()
